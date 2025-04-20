@@ -6,58 +6,56 @@
   <title>3D Model Viewer</title>
   <style>
     body { margin: 0; overflow: hidden; }
-    canvas { display:block; }
+    canvas { display: block; }
   </style>
 </head>
 <body>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/GLTFLoader.js"></script>
 
   <script>
-    // basic setup
-    const scene    = new THREE.Scene();
-    const camera   = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias:true });
+    // Basic setup for three.js scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(innerWidth, innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // lights
-    scene.add(new THREE.AmbientLight(0x404040));
-    const dir = new THREE.DirectionalLight(0xffffff, 1);
-    dir.position.set(5,5,5).normalize();
+    // Lights
+    scene.add(new THREE.AmbientLight(0x404040, 1)); // Ambient light
+    const dir = new THREE.DirectionalLight(0xffffff, 1); // Directional light
+    dir.position.set(5, 5, 5).normalize();
     scene.add(dir);
 
+    // Set camera position
     camera.position.z = 5;
 
-    // 3) use the raw.githubusercontent URL, not the github.com/blob page
+    // Load the 3D model using GLTFLoader
     const rawURL = 'https://raw.githubusercontent.com/404AliOnFire/3d-model-oldapple/main/model/scene.gltf';
-
-    // 4) now the loader exists!
     const loader = new THREE.GLTFLoader();
     loader.load(
       rawURL,
-      gltf => {
+      (gltf) => {
         scene.add(gltf.scene);
-        gltf.scene.scale.set(0.5,0.5,0.5);
-        gltf.scene.position.set(0,-1,0);
+        gltf.scene.scale.set(0.5, 0.5, 0.5);  // Scale the model
+        gltf.scene.position.set(0, -1, 0);   // Position it a bit lower for better view
       },
-      xhr => console.log( (xhr.loaded/xhr.total*100).toFixed(2) + '% loaded' ),
-      err => console.error('Error loading glTF:', err)
+      (xhr) => console.log((xhr.loaded / xhr.total * 100).toFixed(2) + '% loaded'),
+      (err) => console.error('Error loading glTF:', err)
     );
 
-    // render loop
-    function animate(){
+    // Render loop
+    function animate() {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
     }
     animate();
 
-    // handle resize
-    window.addEventListener('resize', ()=>{
+    // Handle resize to adjust for window size changes
+    window.addEventListener('resize', () => {
       renderer.setSize(innerWidth, innerHeight);
-      camera.aspect = innerWidth/innerHeight;
+      camera.aspect = innerWidth / innerHeight;
       camera.updateProjectionMatrix();
     });
   </script>
