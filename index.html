@@ -3,10 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Model</title>
+    <title>3D Model with Three.js</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
 </head>
 <body>
-    <h1>Apple II Computer 3D Model</h1>
-    <iframe width="640" height="480" src="https://sketchfab.com/models/b5d316548d634f16a72dd503db0aa01b/embed" frameborder="0" allowfullscreen></iframe>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/loaders/GLTFLoader.min.js"></script>
+
+<script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const light = new THREE.AmbientLight(0x404040); 
+    scene.add(light);
+
+    const loader = new THREE.GLTFLoader();
+    loader.load('path_to_your_model.glb', function (gltf) {
+        scene.add(gltf.scene);
+        gltf.scene.scale.set(1, 1, 1); 
+        gltf.scene.position.set(0, -1, 0); 
+    }, undefined, function (error) {
+        console.error(error);
+    });
+
+    camera.position.z = 5;
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    });
+</script>
+
 </body>
 </html>
