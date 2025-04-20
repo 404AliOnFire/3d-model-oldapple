@@ -3,51 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Model with Three.js</title>
+    <title>3D Model Viewer</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
     </style>
 </head>
 <body>
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/loaders/GLTFLoader.min.js"></script>
 
-<script>
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/loaders/GLTFLoader.js"></script>
 
-    const light = new THREE.AmbientLight(0x404040); 
-    scene.add(light);
-
-    const loader = new THREE.GLTFLoader();
-    loader.load('scene.gltf', function (gltf) {
-        scene.add(gltf.scene);
-        gltf.scene.scale.set(1, 1, 1); 
-        gltf.scene.position.set(0, -1, 0); 
-    }, undefined, function (error) {
-        console.error(error);
-    });
-
-    camera.position.z = 5;
-
-    function animate() {
-        requestAnimationFrame(animate);
-
-        renderer.render(scene, camera);
-    }
-
-    animate();
-
-    window.addEventListener('resize', () => {
+    <script>
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-    });
-</script>
+        document.body.appendChild(renderer.domElement);
+
+        var loader = new THREE.GLTFLoader();
+        loader.load(
+            'https://github.com/404AliOnFire/3d-model-oldapple/blob/main/model/scene.gltf',
+            function (gltf) {
+                scene.add(gltf.scene);
+                gltf.scene.scale.set(0.5, 0.5, 0.5);  
+                gltf.scene.position.set(0, -1, 0);  
+            },
+            undefined,
+            function (error) {
+                console.error(error);
+            }
+        );
+
+
+        var light = new THREE.AmbientLight(0x404040); 
+        scene.add(light);
+
+        var directionalLight = new THREE.DirectionalLight(0xffffff, 1); 
+        directionalLight.position.set(5, 5, 5).normalize();
+        scene.add(directionalLight);
+
+   
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
 
 </body>
 </html>
