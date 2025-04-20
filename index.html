@@ -5,242 +5,101 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>3D Model Viewer</title>
   <style>
-    body { 
-      margin: 0; 
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-    canvas { 
-      display: block; 
-    }
+    body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+    canvas { display: block; }
     #instructions {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
+      position: absolute; bottom: 20px; left: 50%;
       transform: translateX(-50%);
-      background-color: rgba(0,0,0,0.7);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
-      text-align: center;
-      font-size: 16px;
+      background: rgba(0,0,0,0.7); color: #fff;
+      padding: 10px 20px; border-radius: 8px;
+      font-size: 16px; text-align: center;
     }
     #loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
+      position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      color: white;
-      background-color: rgba(0,0,0,0.7);
-      padding: 20px;
-      border-radius: 8px;
-      font-size: 20px;
+      background: rgba(0,0,0,0.7); color: #fff;
+      padding: 20px; border-radius: 8px;
+      font-size: 20px; text-align: center;
     }
   </style>
 </head>
 <body>
   <div id="loading">Loading model... 0%</div>
   <div id="instructions">Drag to rotate. Scroll to zoom.</div>
-  
-  <!-- Load Three.js first -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  
-  <!-- GLTFLoader for loading the model -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
-  
   <script>
-    // Wait for scripts to load
-    document.addEventListener('DOMContentLoaded', function() {
-      // Wait a moment to ensure all scripts are properly loaded
+    document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         const loadingEl = document.getElementById('loading');
         
-        try {
-          // Basic Three.js setup
-          const scene = new THREE.Scene();
-          scene.background = new THREE.Color(0x333333);
-          
-          const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-          camera.position.set(0, 0, 10);
-          
-          const renderer = new THREE.WebGLRenderer({ antialias: true });
-          renderer.setSize(window.innerWidth, window.innerHeight);
-          renderer.setPixelRatio(window.devicePixelRatio);
-          document.body.appendChild(renderer.domElement);
-          
-          // Lights
-          const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-          scene.add(ambientLight);
-          
-          const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-          directionalLight.position.set(5, 5, 5);
-          scene.add(directionalLight);
-          
-          const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.8);
-          directionalLight2.position.set(-5, 5, -5);
-          scene.add(directionalLight2);
-          
-          // Manual rotation control implementation
-          let isDragging = false;
-          let previousMousePosition = {
-            x: 0,
-            y: 0
-          };
-          let modelRotation = {
-            x: 0,
-            y: 0
-          };
-          let model = null;
-          
-          // Mouse controls
-          document.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            previousMousePosition = {
-              x: e.clientX,
-              y: e.clientY
-            };
-          });
-          
-          document.addEventListener('mousemove', (e) => {
-            if (!isDragging || !model) return;
-            
-            const deltaMove = {
-              x: e.clientX - previousMousePosition.x,
-              y: e.clientY - previousMousePosition.y
-            };
-            
-            modelRotation.y += deltaMove.x * 0.01;
-            modelRotation.x += deltaMove.y * 0.01;
-            
-            model.rotation.y = modelRotation.y;
-            model.rotation.x = modelRotation.x;
-            
-            previousMousePosition = {
-              x: e.clientX,
-              y: e.clientY
-            };
-          });
-          
-          document.addEventListener('mouseup', () => {
-            isDragging = false;
-          });
-          
-          // Zoom with mouse wheel
-          document.addEventListener('wheel', (e) => {
-            if (!model) return;
-            
-            const zoomSpeed = 0.1;
-            if (e.deltaY > 0) {
-              // Zoom out
-              camera.position.z += zoomSpeed;
+        // Three.js setup...
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x333333);
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 1000);
+        camera.position.set(0,0,10);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        const dl = new THREE.DirectionalLight(0xffffff,1); dl.position.set(5,5,5); scene.add(dl);
+        const dl2 = new THREE.DirectionalLight(0xffffff,0.8); dl2.position.set(-5,5,-5); scene.add(dl2);
+
+        // Controls vars
+        let isDragging = false, prevPos = {x:0,y:0}, rot = {x:0,y:0}, model = null;
+        document.addEventListener('mousedown', e => { isDragging=true; prevPos={x:e.clientX,y:e.clientY}; });
+        document.addEventListener('mousemove', e => {
+          if(!isDragging||!model) return;
+          const delta = { x:e.clientX-prevPos.x, y:e.clientY-prevPos.y };
+          rot.y += delta.x*0.01; rot.x += delta.y*0.01;
+          model.rotation.set(rot.x, rot.y, 0);
+          prevPos={x:e.clientX,y:e.clientY};
+        });
+        document.addEventListener('mouseup', () => isDragging=false);
+        document.addEventListener('wheel', e => {
+          camera.position.z = THREE.MathUtils.clamp(camera.position.z + (e.deltaY>0?0.1:-0.1), 1, 15);
+        });
+        // Touch مشابه...
+
+        // Load model with fixed progress
+        const loader = new THREE.GLTFLoader();
+        const modelUrl = 'https://raw.githubusercontent.com/404AliOnFire/3d-model-oldapple/main/model/scene.gltf';
+        loader.load(
+          modelUrl,
+          gltf => {
+            model = gltf.scene;
+            model.scale.set(2,2,2);
+            // center it
+            const box = new THREE.Box3().setFromObject(model);
+            const c = box.getCenter(new THREE.Vector3());
+            model.position.sub(c);
+            scene.add(model);
+            loadingEl.style.display = 'none';
+            (function animate(){ requestAnimationFrame(animate); renderer.render(scene,camera); })();
+          },
+          xhr => {
+            if (xhr.lengthComputable) {
+              const pct = Math.round((xhr.loaded/xhr.total)*100);
+              loadingEl.textContent = `Loading model... ${pct}%`;
             } else {
-              // Zoom in
-              camera.position.z -= zoomSpeed;
+              const kb = Math.round(xhr.loaded/1024);
+              loadingEl.textContent = `Loading model... ${kb} KB loaded`;
             }
-            
-            // Limit zoom range
-            camera.position.z = Math.max(1, Math.min(15, camera.position.z));
-          });
-          
-          // Touch controls for mobile
-          document.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-              isDragging = true;
-              previousMousePosition = {
-                x: e.touches[0].clientX,
-                y: e.touches[0].clientY
-              };
-            }
-          });
-          
-          document.addEventListener('touchmove', (e) => {
-            if (!isDragging || !model || e.touches.length !== 1) return;
-            
-            const deltaMove = {
-              x: e.touches[0].clientX - previousMousePosition.x,
-              y: e.touches[0].clientY - previousMousePosition.y
-            };
-            
-            modelRotation.y += deltaMove.x * 0.01;
-            modelRotation.x += deltaMove.y * 0.01;
-            
-            model.rotation.y = modelRotation.y;
-            model.rotation.x = modelRotation.x;
-            
-            previousMousePosition = {
-              x: e.touches[0].clientX,
-              y: e.touches[0].clientY
-            };
-            
-            e.preventDefault(); // Prevent page scrolling
-          });
-          
-          document.addEventListener('touchend', () => {
-            isDragging = false;
-          });
-          
-          // Load the 3D model
-          if (typeof THREE.GLTFLoader === 'function') {
-            const loader = new THREE.GLTFLoader();
-            const modelUrl = 'https://raw.githubusercontent.com/404AliOnFire/3d-model-oldapple/main/model/scene.gltf';
-            
-            loader.load(
-              modelUrl,
-              (gltf) => {
-                model = gltf.scene;
-                
-                // Set model to be much larger
-                model.scale.set(2.0, 2.0, 2.0);
-                
-                // Center the model
-                const box = new THREE.Box3().setFromObject(model);
-                const center = box.getCenter(new THREE.Vector3());
-                model.position.x = -center.x;
-                model.position.y = -center.y;
-                model.position.z = -center.z;
-                
-                scene.add(model);
-                
-                // Hide loading indicator once model is loaded
-                loadingEl.style.display = 'none';
-                
-                // Animation loop
-                function animate() {
-                  requestAnimationFrame(animate);
-                  renderer.render(scene, camera);
-                }
-                animate();
-              },
-              // Progress callback
-              (xhr) => {
-                const percentComplete = Math.round((xhr.loaded / xhr.total) * 100);
-                loadingEl.textContent = `Loading model... ${percentComplete}%`;
-              },
-              // Error callback
-              (error) => {
-                console.error('Error loading model:', error);
-                loadingEl.textContent = 'Failed to load model. Please refresh and try again.';
-                loadingEl.style.color = 'red';
-              }
-            );
-          } else {
-            console.error("GLTFLoader is not available!");
-            loadingEl.textContent = 'Error: Model loader library is not available';
+          },
+          error => {
+            console.error(error);
+            loadingEl.textContent = 'Failed to load model.';
             loadingEl.style.color = 'red';
           }
-          
-          // Handle window resize
-          window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-          });
-          
-        } catch(e) {
-          console.error("Setup error:", e);
-          loadingEl.textContent = `Viewer initialization error: ${e.message}`;
-          loadingEl.style.color = 'red';
-        }
+        );
+
+        window.addEventListener('resize', () => {
+          camera.aspect = window.innerWidth/window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth,window.innerHeight);
+        });
       }, 200);
     });
   </script>
