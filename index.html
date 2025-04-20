@@ -10,53 +10,109 @@
   </style>
 </head>
 <body>
-
+  <!-- Load Three.js first -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/GLTFLoader.js"></script>
-
+  
+  <!-- Make sure this script loads completely before running your code -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  
   <script>
-    // Basic setup for three.js scene
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(innerWidth, innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    // Lights
-    scene.add(new THREE.AmbientLight(0x404040, 1)); // Ambient light
-    const dir = new THREE.DirectionalLight(0xffffff, 1); // Directional light
-    dir.position.set(5, 5, 5).normalize();
-    scene.add(dir);
-
-    // Set camera position
-    camera.position.z = 5;
-
-    // Load the 3D model using GLTFLoader
-    const rawURL = 'https://raw.githubusercontent.com/404AliOnFire/3d-model-oldapple/main/model/scene.gltf';
-    const loader = new THREE.GLTFLoader();
-    loader.load(
-      rawURL,
-      (gltf) => {
-        scene.add(gltf.scene);
-        gltf.scene.scale.set(0.5, 0.5, 0.5);  // Scale the model
-        gltf.scene.position.set(0, -1, 0);   // Position it a bit lower for better view
-      },
-      (xhr) => console.log((xhr.loaded / xhr.total * 100).toFixed(2) + '% loaded'),
-      (err) => console.error('Error loading glTF:', err)
-    );
-
-    // Render loop
-    function animate() {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    // Handle resize to adjust for window size changes
-    window.addEventListener('resize', () => {
-      renderer.setSize(innerWidth, innerHeight);
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
+    // Wait for DOM content to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add a slight delay to ensure scripts are fully initialized
+      setTimeout(() => {
+        try {
+          // Basic setup for three.js scene
+          const scene = new THREE.Scene();
+          const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+          const renderer = new THREE.WebGLRenderer({ antialias: true });
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          document.body.appendChild(renderer.domElement);
+          
+          // Lights
+          scene.add(new THREE.AmbientLight(0x404040, 1)); // Ambient light
+          const dir = new THREE.DirectionalLight(0xffffff, 1); // Directional light
+          dir.position.set(5, 5, 5).normalize();
+          scene.add(dir);
+          
+          // Set camera position
+          camera.position.z = 5;
+          
+          // Create a simple cube to ensure rendering works while we wait for model
+          const geometry = new THREE.BoxGeometry(1, 1, 1);
+          const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+          const cube = new THREE.Mesh(geometry, material);
+          scene.add(cube);
+          
+          console.log("THREE:", THREE);
+          console.log("GLTFLoader available:", typeof THREE.GLTFLoader);
+          
+          // Load the 3D model using GLTFLoader
+          if (typeof THREE.GLTFLoader === 'function') {
+            const rawURL = 'https://raw.githubusercontent.com/404AliOnFire/3d-model-oldapple/main/model/scene.gltf';
+            const loader = new THREE.GLTFLoader();
+            
+            loader.load(
+              rawURL,
+              (gltf) => {
+                console.log("Model loaded successfully", gltf);
+                scene.remove(cube); // Remove placeholder cube
+                scene.add(gltf.scene);
+                gltf.scene.scale.set(0.5, 0.5, 0.5);  // Scale the model
+                gltf.scene.position.set(0, -1, 0);   // Position it a bit lower for better view
+                
+                // Add rotation animation for the model
+                const model = gltf.scene;
+                function rotateModel() {
+                  if (model) {
+                    model.rotation.y += 0.01;
+                  }
+                }
+                
+                // Update animate function to include rotation
+                animate = function() {
+                  requestAnimationFrame(animate);
+                  rotateModel();
+                  renderer.render(scene, camera);
+                };
+                
+                // Start animation loop
+                animate();
+              },
+              (xhr) => {
+                console.log((xhr.loaded / xhr.total * 100).toFixed(2) + '% loaded');
+              },
+              (err) => {
+                console.error('Error loading glTF:', err);
+              }
+            );
+          } else {
+            console.error("GLTFLoader is not available!");
+            // Fallback animation if loader isn't available
+            function animate() {
+              requestAnimationFrame(animate);
+              cube.rotation.x += 0.01;
+              cube.rotation.y += 0.01;
+              renderer.render(scene, camera);
+            }
+            animate();
+          }
+          
+          // Handle resize to adjust for window size changes
+          window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+          });
+          
+        } catch(e) {
+          console.error("Setup error:", e);
+          document.body.innerHTML = `<div style="color:white; background:black; padding:20px;">
+            Error initializing 3D viewer: ${e.message}<br>
+            Please check console for details.
+          </div>`;
+        }
+      }, 100); // Small delay to ensure scripts are loaded
     });
   </script>
 </body>
